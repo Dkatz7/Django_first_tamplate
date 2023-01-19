@@ -5,10 +5,17 @@
 
 Active virtual enviorment:
 
+  pip install virtualenv
+  python -m virtualenv myenv
+  myenc/scripts/activate
 
 
-Install requirments
+# Install requirments:
+
+  pip -r requirmenets.txt
 
 
 
-# Running the server
+# Running the server:
+
+  python manage.py runserver
