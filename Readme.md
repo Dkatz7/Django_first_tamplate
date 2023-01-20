@@ -9,7 +9,9 @@
 Active virtual enviorment:
 
   pip install virtualenv
+  
   python -m virtualenv myenv
+  
   myenc/scripts/activate
 
 
