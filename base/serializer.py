@@ -14,6 +14,10 @@ class UserInformationSerializer(serializers.ModelSerializer):
     class Meta:
         model = PrivetInformation
         fields= '__all__'
+        def create(self, validated_data):
+                user = self.context['user']
+                print(user)
+                return PrivetInformation.objects.create(**validated_data,user=user)
 
 class api_serializer(serializers.Serializer):
     class Meta:
@@ -23,7 +27,8 @@ class api_serializer(serializers.Serializer):
 
 
     def create(self, validated_data):
-        return PrivetInformation.objects.create(**validated_data)
+        return PrivetInformation.objects.create(**validated_data, user=self.context.get("user"))
+
 
     def update(self, instance, validated_data):
         instance.firstname = validated_data.get('firstname', instance.firstname)

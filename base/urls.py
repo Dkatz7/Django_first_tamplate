@@ -11,9 +11,9 @@ urlpatterns = [
     path("token/refresh/", TokenRefreshView.as_view(), name="token-refresh"),
    path("register/", views.register , name="register"),
     path("events/", views.events),
-    path('userinfo/', views.info, name="userinfo"),
-    path("userinfo/<int:id>", views.info, name="userinfo_pk"),
     path('get_all_images/', views.getImages),
-    path('upload_image/',views.APIViews.as_view())
+    path('upload_image/',views.APIViews.as_view()),
+    path('addinfo/', views.PrivetInformationView.as_view()),
+    path("addinfo/<int:id>", views.PrivetInformationView.as_view(), name="userinfo_id"),
 
-]
+]  

@@ -1,30 +1,28 @@
-from django.shortcuts import render
-from django.http import JsonResponse, HttpResponse
-from django.contrib.auth.models import User
-from django.contrib.auth.forms import UserCreationForm
-from .models import Events
-from .serializer import EventSerializer
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
-from rest_framework import generics
 from rest_framework.response import Response
-from .serializer import UserInformationSerializer
-from .models import PrivetInformation
 from rest_framework.views import APIView
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework import status
 
+from django.contrib.auth.models import User
+
+from .models import Events
+from .serializer import EventSerializer
+from .serializer import UserInformationSerializer
+from .models import PrivetInformation
+
 
 
 def index(req):
-    return JsonResponse('hello', safe=False)
+    return Response('hello', safe=False)
 
 @api_view(['GET'])
 def events(req):
     all_events = EventSerializer(Events.objects.all(), many=True).data
-    return JsonResponse(all_events, safe= False)
+    return Response(all_events, safe= False)
 
 
 #### login ####
@@ -58,60 +56,57 @@ def register(req):
 
 
 ####### full CRUD for user's information #########
-@permission_classes(IsAuthenticated)
-@api_view(['GET','POST','DELETE','PUT','PATCH'])
-def info(req,id=-1):
-    
-    if req.method =='GET':
-        user= req.user
-        if id > -1:
-            try:
-                temp_task=user.privetinformation_set.get(id=id)
-                return Response (UserInformationSerializer(temp_task,many=False).data)
-            except PrivetInformation.DoesNotExist:
-                return Response ("not found")
-        all_tasks=UserInformationSerializer(user.privetinformation_set.all(),many=True).data
-        return Response ( all_tasks)
 
-    if req.method =='POST':
-        tsk_serializer = UserInformationSerializer(data=req.data)
-        if tsk_serializer.is_valid():
-            tsk_serializer.save()
-            return Response ("post...")
-        else:
-            return Response (tsk_serializer.errors)
+@permission_classes([IsAuthenticated])
+class PrivetInformationView(APIView):
+    """
+    This class handle the CRUD operations for MyModel
+    """
+    def get(self, request):
+        """
+        Handle GET requests to return a list of MyModel objects
+        """
+        user=request.user
+        my_model = user.privetinformation_set.all()
+        serializer = UserInformationSerializer(my_model, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
-    if req.method =='DELETE':
-        user= req.user
-        try:  
-            temp_task=user.privetinformation_set.get(id=id)
-        except PrivetInformation.DoesNotExist:
-            return Response ("not found")    
-        temp_task.delete()
-        return Response ("del...")
 
-    if req.method =='PUT':
-        user=req.user
-        user_id = req.data.get('user')
-        if user_id:
-            user_id = int(user_id)
-            user = User.objects.get(id=user_id)
-            try:
-                temp_task=user.privetinformation_set.get(id=id)
-            except PrivetInformation.DoesNotExist:
-                return Response ("not found")
-            ser = UserInformationSerializer(data=req.data)
-            if ser.is_valid():
-                ser.update(temp_task, req.data)
-                temp_task.user = req.user
-                temp_task.save()
-                return Response(ser.data)
-            else:
-                return Response(ser.errors)
-        else:
-            return Response("user field is missing")
+    def post(self, request):
+        """
+        Handle POST requests to create a new Task object
+        """
+        # usr =request.user
+        # print(usr)
+        serializer = UserInformationSerializer(data=request.data, context={'user': request.user})
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+   
+    def put(self, request, id):
+        """
+        Handle PUT requests to update an existing Task object
+        """
+        user=request.user
+        my_model = user.privetinformation_set.all()
+        serializer = UserInformationSerializer(my_model, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+   
+    def delete(self, request, pk):
+        """
+        Handle DELETE requests to delete a Task object
+        """
+        my_model = PrivetInformation.objects.get(pk=pk)
+        my_model.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 #####################*END CRUD ##################
+
+
 
 
 ############# Image uploade / Get images ###############
@@ -119,10 +114,13 @@ def info(req,id=-1):
 
 # //////////// image upload / display
 # return all images to client (without serialize)
+
 @api_view(['GET'])
-def getImages(req):
+@permission_classes([IsAuthenticated])
+def getImages(request):
     res=[] #create an empty list
-    for img in PrivetInformation.objects.all(): #run on every row in the table...
+    user=request.user
+    for img in user.privetinformation_set.all(): #run on every row in the table...
         res.append({"firstname":img.firstname,
                 "lastname":img.lastname,
                 "email":img.email,
@@ -132,10 +130,13 @@ def getImages(req):
 
 
 # upload image method (with serialize)
+
+
+@permission_classes([IsAuthenticated])
 class APIViews(APIView):
     parser_class=(MultiPartParser,FormParser)
     def post(self,request,*args,**kwargs):
-        api_serializer=UserInformationSerializer(data=request.data)
+        api_serializer=UserInformationSerializer(data=request.data, context={'user'==request.user})
        
         if api_serializer.is_valid():
             api_serializer.save()
