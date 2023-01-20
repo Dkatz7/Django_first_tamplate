@@ -1,6 +1,7 @@
 from django.shortcuts import render
 from django.http import JsonResponse, HttpResponse
 from django.contrib.auth.models import User
+from django.contrib.auth.forms import UserCreationForm
 from .models import Events
 from .serializer import EventSerializer
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
@@ -11,6 +12,9 @@ from rest_framework import generics
 from rest_framework.response import Response
 from .serializer import UserInformationSerializer
 from .models import PrivetInformation
+from rest_framework.views import APIView
+from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework import status
 
 
 
@@ -106,3 +110,39 @@ def info(req,id=-1):
                 return Response(ser.errors)
         else:
             return Response("user field is missing")
+
+#####################*END CRUD ##################
+
+
+############# Image uploade / Get images ###############
+
+
+# //////////// image upload / display
+# return all images to client (without serialize)
+@api_view(['GET'])
+def getImages(req):
+    res=[] #create an empty list
+    for img in PrivetInformation.objects.all(): #run on every row in the table...
+        res.append({"firstname":img.firstname,
+                "lastname":img.lastname,
+                "email":img.email,
+               "image":str( img.avatar)
+                }) #append row by to row to res list
+    return Response(res) #return array as json response
+
+
+# upload image method (with serialize)
+class APIViews(APIView):
+    parser_class=(MultiPartParser,FormParser)
+    def post(self,request,*args,**kwargs):
+        api_serializer=UserInformationSerializer(data=request.data)
+       
+        if api_serializer.is_valid():
+            api_serializer.save()
+            return Response(api_serializer.data,status=status.HTTP_201_CREATED)
+        else:
+            print('error',api_serializer.errors)
+            return Response(api_serializer.errors,status=status.HTTP_400_BAD_REQUEST)
+
+
+# //////////// end      image upload / display

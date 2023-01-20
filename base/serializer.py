@@ -9,12 +9,17 @@ class EventSerializer(serializers.ModelSerializer):
         model = Events
         fields = '__all__'
 
-
 class UserInformationSerializer(serializers.ModelSerializer):
     user = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
     class Meta:
         model = PrivetInformation
         fields= '__all__'
+
+class api_serializer(serializers.Serializer):
+    class Meta:
+        model=PrivetInformation
+        fields= '__all__'
+
 
 
     def create(self, validated_data):

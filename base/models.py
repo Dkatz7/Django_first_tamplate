@@ -24,6 +24,6 @@ class PrivetInformation(models.Model):
     city = models.CharField(max_length=20)
     address = models.CharField(max_length=75)
     postalcode = models.FloatField()
-    avatar = models.ImageField(null=True)
+    avatar = models.ImageField(null=True,blank=True,default='/default.photopng.png')
     def __str__(self):
         return self.firstname
